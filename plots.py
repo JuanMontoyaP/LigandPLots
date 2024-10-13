@@ -25,7 +25,7 @@ class GromacsPlot:
         """
         fig, ax = plt.subplots()
 
-        ax.plot(x, y, linewidth=0.7)
+        ax.plot(x, y, linewidth=0.75)
 
         # Add labels and title
         plt.xlabel(titles[0])
@@ -66,6 +66,102 @@ class GromacsPlot:
 
         plt.savefig(
             self.images_path + "minimization.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_temperature(self):
+        """
+        Plot temperature in the NVT equilibration
+        """
+        temperature = read_xvg_files(f"{self.path}/results/temperature.xvg")
+
+        _, ax = self.plot_data(
+            temperature[:, 0],
+            temperature[:, 1],
+            [
+                'Time $(ps)$',
+                'Potential Energy $(K)$',
+                f"{self.protein} - {self.ligand}, NVT Equilibration"
+            ]
+        )
+
+        ax.lines[0].set_color('black')
+
+        plt.ylim(
+            temperature[:, 1].min() - 2,    
+            temperature[:, 1].max() + 2
+        )
+
+        plt.suptitle('Temperature', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "temperature.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_pressure(self):
+        """
+        Plot pressure in NPT equilibration
+        """
+        pressure = read_xvg_files(f"{self.path}/results/pressure.xvg")
+
+        _, ax = self.plot_data(
+            pressure[:, 0],
+            pressure[:, 1],
+            [
+                'Time $(ps)$',
+                'Pressure $(bar)$',
+                f"{self.protein} - {self.ligand}, NPT Equilibration"
+            ]
+        )
+
+        ax.lines[0].set_color('black')
+
+        plt.ylim(
+            pressure[:, 1].min() - 60,    
+            pressure[:, 1].max() + 60
+        )
+
+        plt.suptitle('Pressure', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "pressure.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_density(self):
+        """
+        Plot density in NPT equilibration
+        """
+        density = read_xvg_files(f"{self.path}/results/density.xvg")
+
+        _, ax = self.plot_data(
+            density[:, 0],
+            density[:, 1],
+            [
+                'Time $(ps)$',
+                'Density $(kg/m^{3})$',
+                f"{self.protein}, NPT Equilibration"
+            ]
+        )
+
+        ax.lines[0].set_color('black')
+
+        plt.ylim(
+            density[:, 1].min() - 10,    
+            density[:, 1].max() + 10
+        )
+
+        plt.suptitle('Density', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "density.png",
             bbox_inches='tight',
             pad_inches=0.1,
             dpi=300

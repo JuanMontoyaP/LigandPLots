@@ -73,3 +73,59 @@ class GromacsData:
             volumes=self.volume
         ).decode('utf-8')
         return energy_minimization
+    
+    def generate_nvt_data(self):
+        """
+        Function to generate the temperature data
+        """
+        command = [
+            "sh",
+            "-c",
+            f"""
+                echo 16 0 | \
+                gmx energy -f nvt.edr -o {self.results_folder.name}/temperature.xvg
+            """
+        ]
+
+        logging.info(command[-1])
+        temperature = self._run_gromacs_container(
+            command,
+            volumes=self.volume
+        ).decode("utf-8")
+        return temperature
+
+    def generate_npt_data(self):
+        """
+        Function to generate the pressure & density data
+        """
+        command_pressure = [
+            "sh",
+            "-c",
+            f"""
+                echo 18 0 | \
+                gmx energy -f npt.edr -o {self.results_folder.name}/pressure.xvg
+            """
+        ]
+
+        logging.info(command_pressure[-1])
+        pressure = self._run_gromacs_container(
+            command_pressure,
+            volumes=self.volume
+        ).decode("utf-8")
+
+        command_density = [
+            "sh",
+            "-c",
+            f"""
+                echo 24 0 | \
+                gmx energy -f npt.edr -o {self.results_folder.name}/density.xvg
+            """
+        ]
+
+        logging.info(command_density[-1])
+        density = self._run_gromacs_container(
+            command_density,
+            volumes=self.volume
+        ).decode("utf-8")
+
+        return f"{pressure}, \n, {density}"

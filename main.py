@@ -29,10 +29,29 @@ class LigandPlots:
         energy_minimization: str = gromacs.generate_minimization_data()
         logging.info(energy_minimization)
 
+        logging.info('Generating NVT data')
+        temperature_data: str = gromacs.generate_nvt_data()
+        logging.info(temperature_data)
+
+        logging.info('Generating NPT data')
+        npt_data = gromacs.generate_npt_data()
+        logging.info(npt_data)
+
     def generate_gromacs_plots(self):
         """Generate plots from Gromacs data"""
         plots: GromacsPlot = GromacsPlot(self.path, self.protein, self.ligand)
+        
+        logging.info('Generating energy minimization plot')
         plots.plot_energy_minimization()
+
+        logging.info('Generating temperature plot')
+        plots.plot_temperature()
+
+        logging.info("Plotting pressure")
+        plots.plot_pressure()
+
+        logging.info("Plotting density")
+        plots.plot_density()
 
     def Run(self):
         logging.info('Generating Gromacs data')
