@@ -1,0 +1,40 @@
+"""
+Helper functions
+"""
+from pathlib import Path
+import numpy as np
+
+def create_folder(path: str, folder_name: str = "results") -> None:
+    """
+    Create a new folder at the specified path.
+
+    Args:
+        path (str): The path where the new folder should be created.
+        folder_name (str, optional): The name of the new folder. Defaults to "results".
+
+    Returns:
+        None
+    """
+    # Specify the path of the new folder
+    folder_path = Path(f'{path}/{folder_name}')
+
+    # Use the mkdir method to create the folder
+    folder_path.mkdir(parents=True, exist_ok=True)
+
+def read_xvg_files(file_path: str):
+    """
+    Read data from xvg files.
+    """
+    data = []
+
+    with open(file_path, 'r', encoding='utf8') as file:
+        for line in file:
+
+            if line.startswith('#') or line.startswith('@'):
+                continue
+
+            values = [float(val) for val in line.strip().split()]
+            data.append(values)
+
+    data_array = np.array(data, dtype=float)
+    return data_array
