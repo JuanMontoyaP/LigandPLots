@@ -3,6 +3,7 @@ This file contains the calls to graph the gromacs data
 """
 from pathlib import Path
 import matplotlib.pyplot as plt
+import numpy as np
 
 from helpers import create_folder, read_xvg_files
 
@@ -162,6 +163,114 @@ class GromacsPlot:
 
         plt.savefig(
             self.images_path + "density.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_com_distance(self):
+        """
+        Plot the center of mass distance between the protein and the ligand
+        """
+        com = read_xvg_files(f"{self.path}/results/com_dist.xvg")
+
+        _, ax = self.plot_data(
+            com[:, 0]/1000,
+            com[:, 1],
+            [
+                'Time $(ns)$',
+                'Distance $(nm)$',
+                f"{self.protein} - {self.ligand}"
+            ]
+        )
+
+        ax.lines[0].set_color('black')
+
+        plt.ylim(
+            com[:, 1].min() - 0.5,    
+            com[:, 1].max() + 0.5
+        )
+
+        plt.suptitle('Distance between Centers of Mass', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "com.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_sasa_ligand(self):
+        """
+        Plot the Solvent Accessible Surface Area of the ligand
+        """
+        sasa = read_xvg_files(f"{self.path}/results/sasa.xvg")
+
+        _, ax = self.plot_data(
+            sasa[:, 0]/1000,
+            sasa[:, 1],
+            [
+                'Time $(ns)$',
+                'SASA $(nm^{2})$',
+                f"{self.ligand}"
+            ]
+        )
+
+        ax.lines[0].set_color('black')
+
+        plt.ylim(
+            sasa[:, 1].min() - 0.5,    
+            sasa[:, 1].max() + 0.5
+        )
+
+        plt.suptitle('Solvent Accessible Surface Area', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "sasa.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_interaction_energy(self):
+        """
+        Plot the interaction energy
+        """
+        energy = np.loadtxt(f"{self.path}/results/interaction_energy.xvg", comments=['#', '@'])
+
+        total_energy = energy[:, 1] + energy[:, 2]
+
+        _ = self.plot_data(
+            energy[:, 0]/1000,
+            list(zip(energy[:, 1], energy[:, 2], total_energy)),
+            [
+                'Time $(ns)$',
+                'Energy $(kJ/mol)$',
+                f"{self.ligand}"
+            ]
+        )
+
+        plt.legend(
+            ['Coulombic', 'LJ', 'Total'],
+            fancybox=True,
+            fontsize='small'
+        )
+
+        col_min, col_max = np.min(energy[:, 1]), np.max(energy[:, 1])
+        lj_min, lj_max = np.min(energy[:, 2]), np.max(energy[:, 2])
+        total_min, total_max = np.min(total_energy), np.max(total_energy)
+
+        plt.ylim(
+            min(col_min, lj_min, total_min) - 25,    
+            max(col_max, lj_max, total_max) + 25
+        )
+
+        plt.tight_layout()
+
+        plt.suptitle('Solvent Accessible Surface Area', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "inter_energy.png",
             bbox_inches='tight',
             pad_inches=0.1,
             dpi=300

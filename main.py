@@ -25,17 +25,41 @@ class LigandPlots:
     def generate_gromacs_data(self):
         gromacs: GromacsData = GromacsData(self.path)
         
-        logging.info('Generating minimization data')
-        energy_minimization: str = gromacs.generate_minimization_data()
-        logging.info(energy_minimization)
+        # logging.info('Generating minimization data')
+        # energy_minimization: str = gromacs.generate_minimization_data()
+        # logging.info(energy_minimization)
 
-        logging.info('Generating NVT data')
-        temperature_data: str = gromacs.generate_nvt_data()
-        logging.info(temperature_data)
+        # logging.info('Generating NVT data')
+        # temperature_data: str = gromacs.generate_nvt_data()
+        # logging.info(temperature_data)
 
-        logging.info('Generating NPT data')
-        npt_data = gromacs.generate_npt_data()
-        logging.info(npt_data)
+        # logging.info('Generating NPT data')
+        # npt_data = gromacs.generate_npt_data()
+        # logging.info(npt_data)
+
+        # if self.run_gromacs:
+        #     logging.info('Generating final xtc file')
+        #     gromacs.generate_final_xtc_file()
+
+        #     periodicity = gromacs.fix_periodicity()
+        #     logging.info(periodicity)
+
+        #     gromacs.generate_video()
+
+        # logging.info('Generate initial configuration file')
+        # gromacs.get_initial_configuration()
+
+        # logging.info('Calculate COM between ligand and protein')
+        # com_dist = gromacs.generate_com_distance()
+        # logging.info(com_dist)
+
+        # logging.info('Generate Solvent Accessible Surface Area (SASA)')
+        # sasa_ligand = gromacs.generate_sasa_ligand()
+        # logging.info(sasa_ligand)
+
+        logging.info('Generate Coulombic Interaction Energy')
+        interaction_energy = gromacs.generate_interaction_energy()
+        logging.info(interaction_energy)
 
     def generate_gromacs_plots(self):
         """Generate plots from Gromacs data"""
@@ -52,6 +76,15 @@ class LigandPlots:
 
         logging.info("Plotting density")
         plots.plot_density()
+
+        logging.info("Plotting COM distance")
+        plots.plot_com_distance()
+
+        logging.info("Plotting SASA")
+        plots.plot_sasa_ligand()
+
+        logging.info("Plotting Interaction Energy")
+        plots.plot_interaction_energy()
 
     def Run(self):
         logging.info('Generating Gromacs data')
