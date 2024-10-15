@@ -4,6 +4,7 @@ This file contains the calls to graph the gromacs data
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from helpers import create_folder, read_xvg_files
 
@@ -265,12 +266,84 @@ class GromacsPlot:
             max(col_max, lj_max, total_max) + 25
         )
 
-        plt.tight_layout()
-
-        plt.suptitle('Solvent Accessible Surface Area', fontsize=20, y=1)
+        plt.suptitle('Interaction energy', fontsize=20, y=1)
 
         plt.savefig(
             self.images_path + "inter_energy.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+
+    def plot_rmsd(self):
+        """
+        Plot RMSD
+        """
+        rmsd = pd.read_csv(f"{self.path}/results/rmsd.csv")
+
+        _ = self.plot_data(
+            rmsd['Time (ps)'].values/1000,
+            list(zip(
+                rmsd['RMSD Protein (Å)'].values/10,
+                rmsd['RMSD Ligand (Å)'].values/10
+        )),
+            [
+                'Time $(ns)$',
+                'RMSD $(nm)$',
+                f"{self.protein}, {self.ligand}",
+            ]
+        )
+
+        plt.legend(
+            [
+                self.protein,
+                self.ligand
+            ],
+            fancybox=True,
+            fontsize='small'
+        )
+
+        plt.ylim(0, (rmsd['RMSD Protein (Å)'].max()+2)/10)
+
+        plt.suptitle('RMSD', fontsize=20, y=1)
+        
+        plt.tight_layout()
+    
+        plt.savefig(
+            self.images_path + "rmsd.png",
+            bbox_inches='tight',
+            pad_inches=0.1,
+            dpi=300
+        )
+
+    def plot_radius_gyration(self):
+        """
+        Plot radius of gyration
+        """
+        gyr = read_xvg_files(f"{self.path}/results/gyrate.xvg")
+
+        _, ax = self.plot_data(
+            gyr[:, 0]/1000,
+            gyr[:, 1],
+            [
+                'Time $(ns)$',
+                '$R_{g}$ $(nm)$',
+                f"{self.protein}, Unrestrained MD"
+            ]
+        )
+
+        ax.lines[0].set_color('black')
+
+        plt.ylim(
+            min(gyr[:, 1]) - 0.2,
+            max(gyr[:, 1]) + 0.2
+        )
+
+        plt.suptitle('Radius of gyration', fontsize=20, y=1)
+
+        plt.savefig(
+            self.images_path + "gyration.png",
             bbox_inches='tight',
             pad_inches=0.1,
             dpi=300

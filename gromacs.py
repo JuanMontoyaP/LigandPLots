@@ -5,6 +5,10 @@ import logging
 from pathlib import Path
 import tarfile
 import docker
+import numpy as np
+import pandas as pd
+import MDAnalysis as mda
+from MDAnalysis.analysis import rms
 
 from helpers import create_folder, find_files_with_same_pattern
 
@@ -326,3 +330,109 @@ class GromacsData:
         ).decode("utf-8")
 
         return coulombic_energy
+    
+    def generate_rmsd(self):
+        """
+        Generate the RMSD
+        """
+        u = mda.Universe(
+            f"{self.path}/npt.gro",
+            f"{self.path}/results/fixed.xtc",
+            topology_format="GRO",
+            trajectory_format="XTC"
+        )
+
+        protein = u.select_atoms('protein')
+        ligand = u.select_atoms('resname UNL')
+
+        logging.info(f"Total residues in the protein: {protein.residues.n_residues}")
+        logging.info(f"Total atoms in the ligand: {ligand.n_atoms}")
+
+        total_residues = protein.residues.n_residues
+        selection = f"backbone and not (resid {total_residues-200} to {total_residues}) and not (resid 1 to 211)"
+        rmsd_protein = rms.RMSD(
+            protein,
+            protein,
+            select=selection,
+            ref_frame=0
+        )
+        rmsd_protein.run()
+        logging.info(f"RMSD Protein: {np.mean(rmsd_protein.rmsd[:, 2]):.2f} Å")
+
+        rmsd_ligand = rms.RMSD(
+            ligand,
+            ligand,
+            select="all",
+            ref_frame=0
+        )
+        rmsd_ligand.run()
+        logging.info(f"RMSD Ligand: {np.mean(rmsd_ligand.rmsd[:, 2]):.2f} Å")
+
+        df = pd.DataFrame({
+            "Time (ps)": rmsd_protein.rmsd[:, 1],
+            "RMSD Protein (Å)": rmsd_protein.rmsd[:, 2],
+            "RMSD Ligand (Å)": rmsd_ligand.rmsd[:, 2]
+        })
+
+        df.to_csv(f"{self.results_folder}/rmsd.csv", index=True)
+
+        with open(f"{self.results_folder}/rmsd_summary.txt", "w") as file:
+            file.write(df.describe().to_string())
+
+        return df
+    
+    def generate_radius_gyration(self):
+        """
+        Generate radius of gyration        
+        """
+        filename, _ = self._find_last_tpr_file()
+        command = [
+            "sh",
+            "-c",
+            f"""
+                echo 1 | \
+                gmx gyrate \
+                -s {filename} \
+                -f {self.results_folder.name}/{self.XTC_NO_PBC_FILE} \
+                -o {self.results_folder.name}/gyrate.xvg
+            """
+        ]
+
+        logging.info(command[-1])
+        gyr = self._run_gromacs_container(
+            command,
+            volumes=self.volume
+        ).decode('utf-8')
+
+        return gyr
+    
+    def generate_rmsf(self):
+        """
+        Calculate the RMSF
+        """
+        u = mda.Universe(
+            f"{self.path}/npt.gro",
+            f"{self.path}/results/fixed.xtc",
+            topology_format="GRO",
+            trajectory_format="XTC"
+        )
+
+        protein = u.select_atoms('protein')
+        rmsf = rms.RMSF(
+            protein,
+            ref_frame=0
+        ).run()
+
+        resids = protein.residues.resids
+
+        df = pd.DataFrame({
+            "Residue ID": resids,
+            "RMSF": rmsf.rmsf
+        })
+
+        df.to_csv(f"{self.results_folder}/rmsf.csv", index=True)
+
+        return df
+
+         
+
